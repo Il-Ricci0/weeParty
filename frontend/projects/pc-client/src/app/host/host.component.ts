@@ -82,6 +82,9 @@ export class HostComponent implements OnInit, OnDestroy {
         };
         this.players.update(p => [...p, player]);
 
+        // Small delay to let phone navigate to controller and set up handlers
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Create WebRTC peer and send offer
         const offer = await this.webrtc.createPeerForPlayer(
           msg.connectionId,
