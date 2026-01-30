@@ -135,7 +135,9 @@ export class HostComponent implements OnInit, OnDestroy {
 
   private async generateQRCode(code: string): Promise<void> {
     // Generate URL for phone to join
-    const joinUrl = `${window.location.origin}/join/${code}`;
+    // Replace port with phone client port (4201)
+    const origin = window.location.origin.replace(/:4200\b/, ':4201');
+    const joinUrl = `${origin}/join/${code}`;
     const qrUrl = await QRCode.toDataURL(joinUrl, { width: 256 });
     this.qrCodeUrl.set(qrUrl);
   }

@@ -72,6 +72,6 @@ app.MapGet("/api/health", () => Results.Ok(new { status = "healthy" }))
 .WithName("Health")
 .WithOpenApi();
 
-Console.WriteLine("WeeParty API starting on http://localhost:5000");
-app.Run("http://localhost:5000");
+Console.WriteLine("WeeParty API starting on http://0.0.0.0:5000");
+app.Run("http://0.0.0.0:5000");
 

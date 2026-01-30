@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WeeParty.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+081f10bf885d6260d79d52e33bd559f7b4a301d0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f80d482f2e4cdf52c80c52d6ee1d4195b762a313")]
 [assembly: System.Reflection.AssemblyProductAttribute("WeeParty.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WeeParty.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
