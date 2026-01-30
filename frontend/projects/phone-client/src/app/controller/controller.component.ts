@@ -184,6 +184,18 @@ export class ControllerComponent implements OnInit, OnDestroy {
       });
   }
 
+  onDpadDown(direction: 'up' | 'down'): void {
+    if (!this.connected()) return;
+    const x = direction === 'up' ? -1 : 1;
+    this.currentTilt.set({ x, y: 0 });
+    this.vibrate(10);
+  }
+
+  onDpadUp(): void {
+    if (!this.connected()) return;
+    this.currentTilt.set({ x: 0, y: 0 });
+  }
+
   onButtonDown(button: string): void {
     if (!this.connected()) return;
     this.webrtc.sendInput({

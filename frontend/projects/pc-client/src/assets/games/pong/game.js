@@ -21,6 +21,7 @@
   let gameRunning = false;
   let players = [];
   let playerInputs = {};
+  let keysPressed = {};
 
   // Game objects
   const paddle1 = { x: 30, y: 0, vy: 0, score: 0 };
@@ -263,6 +264,19 @@
 
   // Handle window resize
   window.addEventListener('resize', resize);
+
+  // Keyboard controls for testing
+  window.addEventListener('keydown', (e) => {
+    keysPressed[e.key] = true;
+    // Start game with space if no players
+    if (e.key === ' ' && !gameRunning && players.length === 0) {
+      players = [{ id: 'keyboard1', name: 'Player 1', playerIndex: 0 }];
+      init();
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    keysPressed[e.key] = false;
+  });
 
   // Initial resize
   resize();
