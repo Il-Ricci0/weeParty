@@ -9,14 +9,6 @@
       <p class="waiting">Waiting for host to start game</p>
       <div class="ready-indicator">Ready</div>
     </div>
-  } @else if (!tiltCalibrated()) {
-    <div class="calibration">
-      <h2>Calibrate Controller</h2>
-      <p>Hold your phone in a comfortable position, then tap the button</p>
-      <button class="calibrate-btn" (click)="calibrateTilt()">
-        Calibrate
-      </button>
-    </div>
   } @else {
     <div class="game-controller">
       <div class="tilt-indicator">

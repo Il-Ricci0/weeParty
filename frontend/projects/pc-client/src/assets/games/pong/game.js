@@ -65,10 +65,19 @@
       const input = playerInputs[players[i].id];
       if (input?.tilt) {
         const paddle = i === 0 ? paddle1 : paddle2;
-        // Use tilt y value (-1 to 1) to set velocity
-        paddle.vy = input.tilt.y * PADDLE_SPEED;
+        // Use tilt x value (-1 to 1) for left/right tilt to move paddle up/down
+        paddle.vy = input.tilt.x * PADDLE_SPEED * 2;
       }
     }
+
+    // Keyboard controls for testing (Player 1: W/S, Player 2: Up/Down)
+    if (keysPressed['w'] || keysPressed['W']) paddle1.vy = -PADDLE_SPEED;
+    else if (keysPressed['s'] || keysPressed['S']) paddle1.vy = PADDLE_SPEED;
+    else if (players.length === 0) paddle1.vy = 0;
+
+    if (keysPressed['ArrowUp']) paddle2.vy = -PADDLE_SPEED;
+    else if (keysPressed['ArrowDown']) paddle2.vy = PADDLE_SPEED;
+    else if (players.length < 2) paddle2.vy = 0;
 
     // Move paddles
     paddle1.y += paddle1.vy;

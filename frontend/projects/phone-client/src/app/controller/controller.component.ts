@@ -95,7 +95,8 @@ export class ControllerComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.gameStarted.set(true);
-        this.requestTiltPermission();
+        this.tiltCalibrated.set(true);
+        this.enableTilt();
       });
   }
 
@@ -106,9 +107,14 @@ export class ControllerComponent implements OnInit, OnDestroy {
         const permission = await (DeviceOrientationEvent as any).requestPermission();
         if (permission === 'granted') {
           this.enableTilt();
+        } else {
+          // Permission denied, but still allow calibration to proceed
+          this.tiltEnabled = true;
         }
       } catch (e) {
         console.error('Failed to get orientation permission:', e);
+        // Still allow calibration to proceed
+        this.tiltEnabled = true;
       }
     } else {
       // Non-iOS - just enable
@@ -120,28 +126,24 @@ export class ControllerComponent implements OnInit, OnDestroy {
     this.tiltEnabled = true;
 
     window.addEventListener('deviceorientation', (event) => {
-      if (!this.tiltCalibrated()) return;
-
       // beta: front-back tilt (-180 to 180)
       // gamma: left-right tilt (-90 to 90)
-      const beta = event.beta ?? 0;
       const gamma = event.gamma ?? 0;
 
-      // Calculate relative tilt from calibration point
-      const relativeBeta = beta - this.baseTilt.beta;
-      const relativeGamma = gamma - this.baseTilt.gamma;
+      // Use gamma directly for left/right control (phone held upright)
+      // Normalize to -1 to 1 range (using ±45 degrees as full range)
+      const x = Math.max(-1, Math.min(1, gamma / 45));
 
-      // Normalize to -1 to 1 range (using ±30 degrees as full range)
-      const x = Math.max(-1, Math.min(1, relativeGamma / 30));
-      const y = Math.max(-1, Math.min(1, relativeBeta / 30));
-
-      this.currentTilt.set({ x, y });
+      this.currentTilt.set({ x, y: 0 });
     });
   }
 
   calibrateTilt(): void {
     // Listen for next orientation event to set base
+    let calibrated = false;
     const handler = (event: DeviceOrientationEvent) => {
+      if (calibrated) return;
+      calibrated = true;
       this.baseTilt = {
         beta: event.beta ?? 0,
         gamma: event.gamma ?? 0
@@ -152,6 +154,14 @@ export class ControllerComponent implements OnInit, OnDestroy {
 
     if (this.tiltEnabled) {
       window.addEventListener('deviceorientation', handler);
+      // Timeout - if no orientation event within 1 second, proceed without tilt
+      setTimeout(() => {
+        if (!calibrated) {
+          calibrated = true;
+          window.removeEventListener('deviceorientation', handler);
+          this.tiltCalibrated.set(true);
+        }
+      }, 1000);
     } else {
       // If tilt not enabled, just mark as calibrated (will use buttons only)
       this.tiltCalibrated.set(true);
