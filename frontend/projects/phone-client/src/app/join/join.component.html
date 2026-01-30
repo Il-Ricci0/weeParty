@@ -1,0 +1,43 @@
+<div class="join-screen">
+  <h1>Wee Party</h1>
+
+  <div class="form">
+    <div class="field">
+      <label for="code">Game Code</label>
+      <input
+        id="code"
+        type="text"
+        [value]="code()"
+        (input)="onCodeInput($event)"
+        placeholder="XXXX"
+        maxlength="4"
+        autocomplete="off"
+        autocapitalize="characters"
+      />
+    </div>
+
+    <div class="field">
+      <label for="name">Your Name</label>
+      <input
+        id="name"
+        type="text"
+        [ngModel]="playerName()"
+        (ngModelChange)="playerName.set($event)"
+        placeholder="Player"
+        maxlength="20"
+      />
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button
+      class="join-btn"
+      (click)="join()"
+      [disabled]="joining() || code().length !== 4"
+    >
+      {{ joining() ? 'Joining...' : 'Join Game' }}
+    </button>
+  </div>
+</div>

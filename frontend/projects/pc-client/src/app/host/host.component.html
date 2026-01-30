@@ -1,0 +1,46 @@
+@if (!gameStarted()) {
+  <div class="lobby">
+    <h1>Wee Party</h1>
+    <h2>Pong</h2>
+
+    <div class="join-info">
+      <div class="qr-code">
+        @if (qrCodeUrl()) {
+          <img [src]="qrCodeUrl()" alt="Join QR Code" />
+        }
+      </div>
+
+      <div class="code-display">
+        <span class="label">Join Code:</span>
+        <span class="code">{{ sessionCode() }}</span>
+      </div>
+
+      <p class="instruction">Scan the QR code or enter the code on your phone</p>
+    </div>
+
+    <div class="players">
+      <h3>Players ({{ players().length }})</h3>
+      <ul>
+        @for (player of players(); track player.id) {
+          <li [class.connected]="player.connected">
+            <span class="player-index">P{{ player.playerIndex + 1 }}</span>
+            <span class="player-name">{{ player.name }}</span>
+            <span class="status">{{ player.connected ? 'Ready' : 'Connecting...' }}</span>
+          </li>
+        }
+        @empty {
+          <li class="empty">Waiting for players...</li>
+        }
+      </ul>
+    </div>
+
+    @if (canStartGame()) {
+      <button class="start-btn" (click)="startGame()">Start Game</button>
+    }
+  </div>
+} @else {
+  <app-game-frame
+    [gameId]="'pong'"
+    [players]="players()"
+  />
+}

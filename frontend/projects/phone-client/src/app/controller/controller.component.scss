@@ -1,0 +1,175 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.controller {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  padding: 2rem;
+
+  &.connected {
+    background: linear-gradient(135deg, #1a2e1a 0%, #162e16 100%);
+  }
+
+  &.game-active {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+  }
+}
+
+.status {
+  text-align: center;
+
+  p {
+    font-size: 1.25rem;
+    color: #888;
+
+    &.waiting {
+      margin-bottom: 1rem;
+    }
+  }
+
+  .ready-indicator {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background: rgba(76, 175, 80, 0.3);
+    border: 2px solid #4caf50;
+    border-radius: 20px;
+    color: #4caf50;
+    font-weight: bold;
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #e94560;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.calibration {
+  text-align: center;
+
+  h2 {
+    margin-bottom: 1rem;
+    color: #e94560;
+  }
+
+  p {
+    color: #888;
+    margin-bottom: 2rem;
+    max-width: 280px;
+  }
+}
+
+.calibrate-btn {
+  padding: 1rem 3rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(45deg, #e94560, #ff6b6b);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.game-controller {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  height: 100%;
+  padding-top: 2rem;
+}
+
+.tilt-indicator {
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  position: relative;
+
+  .tilt-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    background: linear-gradient(45deg, #e94560, #ff6b6b);
+    border-radius: 50%;
+    transition: transform 0.05s ease-out;
+  }
+}
+
+.tilt-hint {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 2rem;
+  margin-top: auto;
+  padding-bottom: 3rem;
+}
+
+.action-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(145deg, #e94560, #c73e54);
+  box-shadow:
+    0 6px 0 #a3324a,
+    0 10px 20px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+
+  &:active {
+    transform: translateY(4px);
+    box-shadow:
+      0 2px 0 #a3324a,
+      0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  &.secondary {
+    background: linear-gradient(145deg, #4a90e9, #3a7bd5);
+    box-shadow:
+      0 6px 0 #2d5fa8,
+      0 10px 20px rgba(0, 0, 0, 0.3);
+
+    &:active {
+      box-shadow:
+        0 2px 0 #2d5fa8,
+        0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+  }
+}

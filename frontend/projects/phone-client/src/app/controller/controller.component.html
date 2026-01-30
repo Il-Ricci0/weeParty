@@ -1,0 +1,48 @@
+<div class="controller" [class.connected]="connected()" [class.game-active]="gameStarted()">
+  @if (!connected()) {
+    <div class="status">
+      <div class="spinner"></div>
+      <p>Connecting to game...</p>
+    </div>
+  } @else if (!gameStarted()) {
+    <div class="status">
+      <p class="waiting">Waiting for host to start game</p>
+      <div class="ready-indicator">Ready</div>
+    </div>
+  } @else if (!tiltCalibrated()) {
+    <div class="calibration">
+      <h2>Calibrate Controller</h2>
+      <p>Hold your phone in a comfortable position, then tap the button</p>
+      <button class="calibrate-btn" (click)="calibrateTilt()">
+        Calibrate
+      </button>
+    </div>
+  } @else {
+    <div class="game-controller">
+      <div class="tilt-indicator">
+        <div class="tilt-dot" [style.transform]="'translate(' + (currentTilt().x * 40) + 'px, ' + (currentTilt().y * 40) + 'px)'"></div>
+      </div>
+
+      <p class="tilt-hint">Tilt phone to move paddle</p>
+
+      <div class="buttons">
+        <button
+          class="action-btn"
+          (pointerdown)="onButtonDown('A')"
+          (pointerup)="onButtonUp('A')"
+          (pointerleave)="onButtonUp('A')"
+        >
+          A
+        </button>
+        <button
+          class="action-btn secondary"
+          (pointerdown)="onButtonDown('B')"
+          (pointerup)="onButtonUp('B')"
+          (pointerleave)="onButtonUp('B')"
+        >
+          B
+        </button>
+      </div>
+    </div>
+  }
+</div>

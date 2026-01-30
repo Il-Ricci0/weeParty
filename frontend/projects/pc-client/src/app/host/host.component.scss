@@ -1,0 +1,146 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: white;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.lobby {
+  text-align: center;
+  padding: 2rem;
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(45deg, #e94560, #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    color: #888;
+    margin-bottom: 2rem;
+  }
+}
+
+.join-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+
+  .qr-code {
+    margin-bottom: 1rem;
+
+    img {
+      border-radius: 8px;
+      background: white;
+      padding: 8px;
+    }
+  }
+
+  .code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .label {
+      color: #888;
+    }
+
+    .code {
+      font-size: 2.5rem;
+      font-weight: bold;
+      letter-spacing: 0.3em;
+      color: #e94560;
+      font-family: 'Courier New', monospace;
+    }
+  }
+
+  .instruction {
+    color: #666;
+    font-size: 0.9rem;
+  }
+}
+
+.players {
+  margin-bottom: 2rem;
+
+  h3 {
+    color: #888;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+
+    &.connected {
+      background: rgba(76, 175, 80, 0.2);
+    }
+
+    &.empty {
+      color: #666;
+      font-style: italic;
+    }
+
+    .player-index {
+      background: #e94560;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .player-name {
+      font-weight: 500;
+    }
+
+    .status {
+      color: #888;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.start-btn {
+  padding: 1rem 3rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(45deg, #e94560, #ff6b6b);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
