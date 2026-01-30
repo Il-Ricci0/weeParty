@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal, HostListener } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { SignalingService, WebRTCService, OfferMessage, IceCandidateMessage, TiltInput } from 'shared';
+import { SignalingService, WebRTCService, OfferMessage, IceCandidateMessage } from 'shared';
 
 @Component({
   selector: 'app-controller',
@@ -16,14 +16,11 @@ export class ControllerComponent implements OnInit, OnDestroy {
   private playerId = '';
   private playerIndex = 0;
   private hostConnectionId = '';
-  private tiltEnabled = false;
 
   connected = signal<boolean>(false);
   gameStarted = signal<boolean>(false);
-  tiltCalibrated = signal<boolean>(false);
-  currentTilt = signal<TiltInput>({ x: 0, y: 0 });
 
-  // D-Pad state
+  // D-Pad velocity
   private readonly VELOCITY = 0.5; // adjust movement speed
 
   constructor(
@@ -43,7 +40,6 @@ export class ControllerComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.setupSignalingHandlers();
-    this.enableTilt();
   }
 
   ngOnDestroy(): void {
@@ -78,22 +74,20 @@ export class ControllerComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.gameStarted.set(true);
-        this.tiltCalibrated.set(true);
-        this.tiltEnabled = true;
       });
   }
 
   /** D-Pad Handlers **/
   onDpadDown(direction: 'up' | 'down'): void {
     if (!this.connected()) return;
-    const dx = direction === 'up' ? -this.VELOCITY : this.VELOCITY;
-    this.sendTilt(dx, 0);
+    const x = direction === 'up' ? -this.VELOCITY : this.VELOCITY;
+    this.sendDpadInput(x);
     this.vibrate(10);
   }
 
   onDpadUp(): void {
     if (!this.connected()) return;
-    this.sendTilt(0, 0);
+    this.sendDpadInput(0);
   }
 
   /** Button Handlers **/
@@ -118,36 +112,13 @@ export class ControllerComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Tilt Handling **/
-  private enableTilt(): void {
-    if (!this.tiltEnabled) return;
-
-    let lastSentX = 0;
-    let lastSentY = 0;
-    const DEADZONE = 0.05;
-
-    window.addEventListener('deviceorientation', event => {
-      const gamma = event.gamma ?? 0;
-      const x = Math.max(-1, Math.min(1, gamma / 45)); // normalize
-      const y = 0;
-
-      // Only send if significant change
-      if (Math.abs(x - lastSentX) > DEADZONE || Math.abs(y - lastSentY) > DEADZONE) {
-        this.sendTilt(x, y);
-        lastSentX = x;
-        lastSentY = y;
-      }
-
-      this.currentTilt.set({ x, y });
-    });
-  }
-
-  private sendTilt(x: number, y: number): void {
+  /** Helper to send D-Pad input **/
+  private sendDpadInput(x: number): void {
     this.webrtc.sendInput({
-      type: 'tilt',
+      type: 'tilt', // keeping same type so game can process as movement
       playerId: this.playerId,
       playerIndex: this.playerIndex,
-      data: { x, y }
+      data: { x, y: 0 }
     });
   }
 
