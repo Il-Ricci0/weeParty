@@ -47,6 +47,13 @@ export class JoinComponent {
       // Listen for join response
       this.signaling.onMessage<SessionJoinedMessage>('session-joined')
         .subscribe((msg) => {
+          // Save session data for reconnection
+          sessionStorage.setItem('weeParty-session', JSON.stringify({
+            sessionId: msg.sessionId,
+            playerId: msg.playerId,
+            playerIndex: msg.playerIndex,
+            playerName: name
+          }));
           // Navigate to controller with session info
           this.router.navigate(['/controller'], {
             state: {

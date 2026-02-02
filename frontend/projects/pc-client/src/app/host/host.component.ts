@@ -8,6 +8,7 @@ import {
   Player,
   PlayerJoinedMessage,
   PlayerLeftMessage,
+  PlayerRejoinedMessage,
   OfferMessage,
   AnswerMessage,
   IceCandidateMessage,
@@ -105,6 +106,58 @@ export class HostComponent implements OnInit, OnDestroy {
           this.webrtc.removePeer(player.connectionId);
         }
         this.players.update(p => p.filter(pl => pl.id !== msg.playerId));
+      });
+
+    // Player rejoined (page reload case)
+    this.signaling.onMessage<PlayerRejoinedMessage>('player-rejoined')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(async (msg) => {
+        // Find existing player and update their connectionId
+        const existingPlayer = this.players().find(p => p.id === msg.playerId);
+        const oldConnectionId = existingPlayer?.connectionId;
+
+        // Remove old peer connection if exists
+        if (oldConnectionId) {
+          this.webrtc.removePeer(oldConnectionId);
+        }
+
+        // Update or add player with new connectionId
+        this.players.update(players => {
+          const idx = players.findIndex(p => p.id === msg.playerId);
+          if (idx >= 0) {
+            const updated = [...players];
+            updated[idx] = {
+              ...updated[idx],
+              connectionId: msg.connectionId,
+              connected: false
+            };
+            return updated;
+          } else {
+            // Player was removed, re-add them
+            return [...players, {
+              id: msg.playerId,
+              name: msg.playerName,
+              playerIndex: msg.playerIndex,
+              connectionId: msg.connectionId,
+              connected: false
+            }];
+          }
+        });
+
+        // Small delay then create new WebRTC peer and send offer
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const player = this.players().find(p => p.id === msg.playerId);
+        if (!player) return;
+
+        const offer = await this.webrtc.createPeerForPlayer(
+          msg.connectionId,
+          msg.playerId,
+          msg.playerIndex,
+          (candidate) => this.signaling.sendIceCandidate(msg.connectionId, candidate)
+        );
+
+        this.signaling.sendOffer(msg.connectionId, offer.sdp!);
       });
 
     // Handle WebRTC answer from phone

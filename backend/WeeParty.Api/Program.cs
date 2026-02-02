@@ -37,6 +37,7 @@ app.Map("/ws", async context =>
 {
     if (context.WebSockets.IsWebSocketRequest)
     {
+        
         var hub = context.RequestServices.GetRequiredService<SignalingHub>();
         using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
         await hub.HandleConnection(webSocket);

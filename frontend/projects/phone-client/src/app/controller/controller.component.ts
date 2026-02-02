@@ -2,7 +2,14 @@ import { Component, OnInit, OnDestroy, signal, HostListener } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { SignalingService, WebRTCService, OfferMessage, IceCandidateMessage } from 'shared';
+import { SignalingService, WebRTCService, OfferMessage, IceCandidateMessage, SessionRejoinedMessage } from 'shared';
+
+interface SavedSession {
+  sessionId: string;
+  playerId: string;
+  playerIndex: number;
+  playerName: string;
+}
 
 @Component({
   selector: 'app-controller',
@@ -15,10 +22,14 @@ export class ControllerComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private playerId = '';
   private playerIndex = 0;
+  private playerName = '';
+  private sessionId = '';
   private hostConnectionId = '';
+  private isRejoining = false;
 
   connected = signal<boolean>(false);
   gameStarted = signal<boolean>(false);
+  reconnecting = signal<boolean>(false);
 
   // D-Pad velocity
   private readonly VELOCITY = 0.5; // adjust movement speed
@@ -28,18 +39,73 @@ export class ControllerComponent implements OnInit, OnDestroy {
     private webrtc: WebRTCService,
     private router: Router
   ) {
+    // Check if we have an active signaling connection (indicates fresh navigation, not reload)
+    const hasActiveConnection = this.signaling.isConnected();
+
+    // Try to get state from router navigation first
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state || history.state;
-    if (!state?.playerId) {
-      this.router.navigate(['/']);
+
+    if (state?.playerId && hasActiveConnection) {
+      // Fresh navigation with active connection
+      this.playerId = state.playerId;
+      this.playerIndex = state.playerIndex;
+      this.sessionId = state.sessionId;
       return;
     }
-    this.playerId = state.playerId;
-    this.playerIndex = state.playerIndex;
+
+    // Check sessionStorage for saved session (page reload case or lost connection)
+    const savedSession = this.getSavedSession();
+    if (savedSession) {
+      this.playerId = savedSession.playerId;
+      this.playerIndex = savedSession.playerIndex;
+      this.playerName = savedSession.playerName;
+      this.sessionId = savedSession.sessionId;
+      this.isRejoining = true;
+      return;
+    }
+
+    // Fallback: if we have state but no connection, use state data for rejoin
+    if (state?.playerId) {
+      this.playerId = state.playerId;
+      this.playerIndex = state.playerIndex;
+      this.sessionId = state.sessionId;
+      this.isRejoining = true;
+      return;
+    }
+
+    // No session data available - redirect to join
+    this.router.navigate(['/']);
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.setupSignalingHandlers();
+
+    if (this.isRejoining) {
+      await this.rejoinSession();
+    }
+  }
+
+  private getSavedSession(): SavedSession | null {
+    const saved = sessionStorage.getItem('weeParty-session');
+    if (!saved) return null;
+    try {
+      return JSON.parse(saved) as SavedSession;
+    } catch {
+      return null;
+    }
+  }
+
+  private async rejoinSession(): Promise<void> {
+    this.reconnecting.set(true);
+    try {
+      await this.signaling.connect();
+      this.signaling.rejoinSession(this.sessionId, this.playerId, this.playerIndex, this.playerName);
+    } catch (e) {
+      console.error('Failed to reconnect:', e);
+      sessionStorage.removeItem('weeParty-session');
+      this.router.navigate(['/']);
+    }
   }
 
   ngOnDestroy(): void {
@@ -49,6 +115,34 @@ export class ControllerComponent implements OnInit, OnDestroy {
   }
 
   private setupSignalingHandlers(): void {
+    // Handle successful rejoin
+    this.signaling.onMessage<SessionRejoinedMessage>('session-rejoined')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((msg) => {
+        this.reconnecting.set(false);
+        if (msg.gameStarted) {
+          this.gameStarted.set(true);
+        }
+        // Host will send a new offer after receiving player-rejoined
+      });
+
+    // Handle rejoin/connection errors
+    this.signaling.onMessage<{ type: 'error'; message: string }>('error')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(msg => {
+        console.error('Session error:', msg.message);
+        sessionStorage.removeItem('weeParty-session');
+        this.router.navigate(['/']);
+      });
+
+    // Handle session ended (host disconnected)
+    this.signaling.onMessage<{ type: 'session-ended' }>('session-ended')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        sessionStorage.removeItem('weeParty-session');
+        this.router.navigate(['/']);
+      });
+
     // Handle host offer
     this.signaling.onMessage<OfferMessage>('offer')
       .pipe(takeUntil(this.destroy$))
@@ -57,6 +151,7 @@ export class ControllerComponent implements OnInit, OnDestroy {
         await this.webrtc.createPeerForHost(msg.fromId, candidate => this.signaling.sendIceCandidate(msg.fromId, candidate));
         const answer = await this.webrtc.handleOffer(msg.fromId, msg.sdp);
         this.signaling.sendAnswer(msg.fromId, answer.sdp!);
+        this.reconnecting.set(false);
       });
 
     // Handle ICE candidates

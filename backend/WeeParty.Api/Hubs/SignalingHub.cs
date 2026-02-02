@@ -68,6 +68,9 @@ public class SignalingHub
                 case "join-session":
                     await HandleJoinSession(webSocket, connectionId, doc.RootElement);
                     break;
+                case "rejoin-session":
+                    await HandleRejoinSession(webSocket, connectionId, doc.RootElement);
+                    break;
                 case "offer":
                 case "answer":
                 case "ice-candidate":
@@ -163,6 +166,64 @@ public class SignalingHub
                 messageObj["sdpMLineIndex"] = sdpMLineIndex.GetInt32();
 
             await SendMessage(targetSocket, messageObj);
+        }
+    }
+
+    private async Task HandleRejoinSession(WebSocket webSocket, string connectionId, JsonElement element)
+    {
+        var sessionId = element.GetProperty("sessionId").GetString() ?? "";
+        var playerId = element.GetProperty("playerId").GetString() ?? "";
+        var playerIndex = element.TryGetProperty("playerIndex", out var idx) ? idx.GetInt32() : 0;
+        var playerName = element.TryGetProperty("playerName", out var n) ? n.GetString() ?? "Player" : "Player";
+
+        var session = _sessionService.GetSession(sessionId);
+        if (session == null)
+        {
+            await SendMessage(webSocket, new { type = "error", message = "Session not found" });
+            return;
+        }
+
+        // Try to find existing player and update their connection
+        var player = session.Players.FirstOrDefault(p => p.Id == playerId);
+        if (player != null)
+        {
+            // Player still exists - just update connection ID
+            player.ConnectionId = connectionId;
+        }
+        else
+        {
+            // Player was removed (old connection closed first) - re-add with same ID
+            player = new Player
+            {
+                Id = playerId,
+                ConnectionId = connectionId,
+                Name = playerName,
+                PlayerIndex = playerIndex
+            };
+            session.Players.Add(player);
+        }
+
+        // Notify the player they rejoined (include game state)
+        await SendMessage(webSocket, new
+        {
+            type = "session-rejoined",
+            sessionId = session.Id,
+            playerId = player.Id,
+            playerIndex = player.PlayerIndex,
+            gameStarted = session.State == SessionState.Playing
+        });
+
+        // Notify the host about the reconnected player
+        if (_connections.TryGetValue(session.HostConnectionId, out var hostSocket))
+        {
+            await SendMessage(hostSocket, new
+            {
+                type = "player-rejoined",
+                playerId = player.Id,
+                playerName = player.Name,
+                playerIndex = player.PlayerIndex,
+                connectionId
+            });
         }
     }
 

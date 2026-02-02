@@ -2,7 +2,7 @@
   @if (!connected()) {
     <div class="status">
       <div class="spinner"></div>
-      <p>Connecting to game...</p>
+      <p>{{ reconnecting() ? 'Reconnecting...' : 'Connecting to game...' }}</p>
     </div>
   } @else if (!gameStarted()) {
     <div class="status">

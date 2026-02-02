@@ -16,6 +16,10 @@ export class SignalingService implements OnDestroy {
   readonly connectionId$ = this.connectionIdSubject.asObservable();
   readonly connected$ = this.connectedSubject.asObservable();
 
+  isConnected(): boolean {
+    return this.socket?.readyState === WebSocket.OPEN;
+  }
+
   connect(url?: string): Promise<string> {
     // Default to same host as the page, using WebSocket protocol
     if (!url) {
@@ -88,6 +92,10 @@ export class SignalingService implements OnDestroy {
 
   joinSession(code: string, playerName: string): void {
     this.send({ type: 'join-session', code, playerName });
+  }
+
+  rejoinSession(sessionId: string, playerId: string, playerIndex: number, playerName: string): void {
+    this.send({ type: 'rejoin-session', sessionId, playerId, playerIndex, playerName });
   }
 
   sendOffer(targetId: string, sdp: string): void {

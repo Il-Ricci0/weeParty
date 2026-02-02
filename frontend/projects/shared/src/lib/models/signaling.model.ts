@@ -21,6 +21,14 @@ export interface SessionJoinedMessage extends SignalingMessage {
   playerIndex: number;
 }
 
+export interface SessionRejoinedMessage extends SignalingMessage {
+  type: 'session-rejoined';
+  sessionId: string;
+  playerId: string;
+  playerIndex: number;
+  gameStarted: boolean;
+}
+
 export interface PlayerJoinedMessage extends SignalingMessage {
   type: 'player-joined';
   playerId: string;
@@ -33,6 +41,14 @@ export interface PlayerLeftMessage extends SignalingMessage {
   type: 'player-left';
   playerId: string;
   playerIndex: number;
+}
+
+export interface PlayerRejoinedMessage extends SignalingMessage {
+  type: 'player-rejoined';
+  playerId: string;
+  playerName: string;
+  playerIndex: number;
+  connectionId: string;
 }
 
 export interface OfferMessage extends SignalingMessage {
