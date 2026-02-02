@@ -42,5 +42,7 @@
   <app-game-frame
     [gameId]="'pong'"
     [players]="players()"
+    (navigateToHub)="onNavigateToHub()"
+    (restartGame)="onRestartGame()"
   />
 }

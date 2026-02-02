@@ -10,38 +10,25 @@
       <div class="ready-indicator">Ready</div>
     </div>
   } @else {
-    <div class="game-controller">
-      <div class="dpad">
-        <button
-          class="dpad-btn up"
-          (pointerdown)="onDpadDown('up')"
-          (pointerup)="onDpadUp()"
-          (pointerleave)="onDpadUp()"
-        >
-          ▲
-        </button>
-        <button
-          class="dpad-btn down"
-          (pointerdown)="onDpadDown('down')"
-          (pointerup)="onDpadUp()"
-          (pointerleave)="onDpadUp()"
-        >
-          ▼
-        </button>
-      </div>
-
-      <p class="hint">Hold UP or DOWN to move paddle</p>
-
-      <div class="buttons">
-        <button
-          class="action-btn"
-          (pointerdown)="onButtonDown('A')"
-          (pointerup)="onButtonUp('A')"
-          (pointerleave)="onButtonUp('A')"
-        >
-          A
-        </button>
-      </div>
+    <div class="split-controller" [class.landscape]="isLandscape()">
+      <button
+        class="zone up-zone"
+        (pointerdown)="onZoneDown('up')"
+        (pointerup)="onZoneUp()"
+        (pointerleave)="onZoneUp()"
+        (pointercancel)="onZoneUp()"
+      >
+        <span class="arrow">&#9650;</span>
+      </button>
+      <button
+        class="zone down-zone"
+        (pointerdown)="onZoneDown('down')"
+        (pointerup)="onZoneUp()"
+        (pointerleave)="onZoneUp()"
+        (pointercancel)="onZoneUp()"
+      >
+        <span class="arrow">&#9660;</span>
+      </button>
     </div>
   }
 </div>

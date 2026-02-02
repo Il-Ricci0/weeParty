@@ -30,9 +30,9 @@ export class ControllerComponent implements OnInit, OnDestroy {
   connected = signal<boolean>(false);
   gameStarted = signal<boolean>(false);
   reconnecting = signal<boolean>(false);
+  isLandscape = signal<boolean>(false);
 
-  // D-Pad velocity
-  private readonly VELOCITY = 0.5; // adjust movement speed
+  private readonly VELOCITY = 0.5;
 
   constructor(
     private signaling: SignalingService,
@@ -80,10 +80,20 @@ export class ControllerComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.setupSignalingHandlers();
+    this.updateOrientation();
 
     if (this.isRejoining) {
       await this.rejoinSession();
     }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.updateOrientation();
+  }
+
+  private updateOrientation(): void {
+    this.isLandscape.set(window.innerWidth > window.innerHeight);
   }
 
   private getSavedSession(): SavedSession | null {
@@ -172,45 +182,21 @@ export class ControllerComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** D-Pad Handlers **/
-  onDpadDown(direction: 'up' | 'down'): void {
+  onZoneDown(direction: 'up' | 'down'): void {
     if (!this.connected()) return;
     const x = direction === 'up' ? -this.VELOCITY : this.VELOCITY;
-    this.sendDpadInput(x);
+    this.sendInput(x);
     this.vibrate(10);
   }
 
-  onDpadUp(): void {
+  onZoneUp(): void {
     if (!this.connected()) return;
-    this.sendDpadInput(0);
+    this.sendInput(0);
   }
 
-  /** Button Handlers **/
-  onButtonDown(button: string): void {
-    if (!this.connected()) return;
+  private sendInput(x: number): void {
     this.webrtc.sendInput({
-      type: 'button',
-      playerId: this.playerId,
-      playerIndex: this.playerIndex,
-      data: { button, pressed: true }
-    });
-    this.vibrate(10);
-  }
-
-  onButtonUp(button: string): void {
-    if (!this.connected()) return;
-    this.webrtc.sendInput({
-      type: 'button',
-      playerId: this.playerId,
-      playerIndex: this.playerIndex,
-      data: { button, pressed: false }
-    });
-  }
-
-  /** Helper to send D-Pad input **/
-  private sendDpadInput(x: number): void {
-    this.webrtc.sendInput({
-      type: 'tilt', // keeping same type so game can process as movement
+      type: 'tilt',
       playerId: this.playerId,
       playerIndex: this.playerIndex,
       data: { x, y: 0 }

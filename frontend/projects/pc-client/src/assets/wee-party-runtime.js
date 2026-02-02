@@ -113,6 +113,24 @@
         playerId,
         message
       }, '*');
+    },
+
+    /**
+     * Request navigation to the game hub/selection screen
+     */
+    navigateToHub() {
+      window.parent.postMessage({
+        type: 'navigate-to-hub'
+      }, '*');
+    },
+
+    /**
+     * Request game restart
+     */
+    restartGame() {
+      window.parent.postMessage({
+        type: 'restart-game'
+      }, '*');
     }
   };
 

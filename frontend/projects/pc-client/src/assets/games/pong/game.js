@@ -8,6 +8,10 @@
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   const waitingEl = document.getElementById('waiting');
+  const gameOverEl = document.getElementById('gameOver');
+  const winnerTextEl = document.getElementById('winnerText');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+  const toHubBtn = document.getElementById('toHubBtn');
 
   // Game constants
   const PADDLE_WIDTH = 15;
@@ -56,6 +60,7 @@
     resetBall();
     gameRunning = true;
     waitingEl.style.display = 'none';
+    gameOverEl.classList.remove('visible');
     requestAnimationFrame(gameLoop);
   }
 
@@ -206,18 +211,23 @@
   // End game
   function endGame(winner) {
     gameRunning = false;
+    const winnerName = players[winner]?.name || 'Player ' + (winner + 1);
+    winnerTextEl.textContent = `${winnerName} Wins!`;
+    gameOverEl.classList.add('visible');
+  }
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Restart game
+  function restartGame() {
+    paddle1.score = 0;
+    paddle2.score = 0;
+    init();
+  }
 
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 60px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${players[winner]?.name || 'Player ' + (winner + 1)} Wins!`, canvas.width / 2, canvas.height / 2);
-
-    ctx.font = '24px sans-serif';
-    ctx.fillStyle = '#888';
-    ctx.fillText('Press any button to play again', canvas.width / 2, canvas.height / 2 + 50);
+  // Navigate to hub
+  function goToHub() {
+    if (window.WeeParty) {
+      window.WeeParty.navigateToHub();
+    }
   }
 
   // Vibrate a player's controller
@@ -237,13 +247,6 @@
 
     if (input.type === 'tilt') {
       playerInputs[playerId].tilt = input.data;
-    } else if (input.type === 'button' && input.data.pressed) {
-      // Any button press restarts game if ended
-      if (!gameRunning) {
-        paddle1.score = 0;
-        paddle2.score = 0;
-        init();
-      }
     }
   }
 
@@ -264,6 +267,10 @@
 
   // Handle window resize
   window.addEventListener('resize', resize);
+
+  // Button click handlers
+  playAgainBtn.addEventListener('click', restartGame);
+  toHubBtn.addEventListener('click', goToHub);
 
   // Keyboard controls for testing
   window.addEventListener('keydown', (e) => {

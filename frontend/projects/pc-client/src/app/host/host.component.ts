@@ -11,8 +11,7 @@ import {
   PlayerRejoinedMessage,
   OfferMessage,
   AnswerMessage,
-  IceCandidateMessage,
-  InputEvent
+  IceCandidateMessage
 } from 'shared';
 import { GameFrameComponent } from '../game-frame/game-frame.component';
 
@@ -203,8 +202,13 @@ export class HostComponent implements OnInit, OnDestroy {
     this.gameStarted.set(true);
   }
 
-  onInputFromGame(input: InputEvent): void {
-    // Game iframe might send back events (not used in Pong, but available)
-    console.log('Input from game:', input);
+  onNavigateToHub(): void {
+    // Return to lobby (game selection)
+    this.gameStarted.set(false);
+  }
+
+  onRestartGame(): void {
+    // Game handles restart internally via iframe reload
+    // This is here for future use if needed
   }
 }

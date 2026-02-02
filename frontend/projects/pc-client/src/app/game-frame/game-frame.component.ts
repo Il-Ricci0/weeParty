@@ -1,17 +1,19 @@
 import {
   Component,
   Input,
+  Output,
+  EventEmitter,
   OnInit,
   OnDestroy,
   ElementRef,
   ViewChild,
   AfterViewInit,
-  computed
+  HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject, takeUntil } from 'rxjs';
-import { WebRTCService, InputEvent, Player } from 'shared';
+import { WebRTCService, Player } from 'shared';
 
 @Component({
   selector: 'app-game-frame',
@@ -24,6 +26,9 @@ export class GameFrameComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() gameId: string = 'pong';
   @Input() players: Player[] = [];
 
+  @Output() navigateToHub = new EventEmitter<void>();
+  @Output() restartGame = new EventEmitter<void>();
+
   @ViewChild('gameFrame') gameFrame!: ElementRef<HTMLIFrameElement>;
 
   private destroy$ = new Subject<void>();
@@ -32,6 +37,23 @@ export class GameFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private webrtc: WebRTCService,
     private sanitizer: DomSanitizer
   ) {}
+
+  @HostListener('window:message', ['$event'])
+  onMessage(event: MessageEvent): void {
+    // Only handle messages from our iframe
+    if (event.source !== this.gameFrame?.nativeElement?.contentWindow) {
+      return;
+    }
+
+    switch (event.data?.type) {
+      case 'navigate-to-hub':
+        this.navigateToHub.emit();
+        break;
+      case 'restart-game':
+        this.restartGame.emit();
+        break;
+    }
+  }
 
   ngOnInit(): void {
     // Listen for input from WebRTC and forward to game
