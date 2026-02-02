@@ -20,6 +20,7 @@
   const PADDLE_SPEED = 8;
   const BALL_SPEED = 7;
   const WINNING_SCORE = 5;
+  const BOT_DIFFICULTY = 0.85; // 0-1, higher = harder (reaction speed)
 
   // Game state
   let gameRunning = false;
@@ -83,7 +84,10 @@
 
     if (keysPressed['ArrowUp']) paddle2.vy = -PADDLE_SPEED;
     else if (keysPressed['ArrowDown']) paddle2.vy = PADDLE_SPEED;
-    else if (players.length < 2) paddle2.vy = 0;
+    else if (players.length === 1) {
+      // Bot controls paddle2 when only one player
+      updateBot();
+    }
 
     // Move paddles
     paddle1.y += paddle1.vy;
@@ -179,10 +183,8 @@
       ctx.font = '24px sans-serif';
       ctx.fillStyle = '#e94560';
       ctx.fillText(players[0]?.name || 'P1', canvas.width / 4, 170);
-      if (players.length > 1) {
-        ctx.fillStyle = '#4a90e9';
-        ctx.fillText(players[1]?.name || 'P2', canvas.width * 3 / 4, 170);
-      }
+      ctx.fillStyle = '#4a90e9';
+      ctx.fillText(players.length > 1 ? (players[1]?.name || 'P2') : 'Bot', canvas.width * 3 / 4, 170);
     }
 
     // Draw paddles
@@ -211,7 +213,12 @@
   // End game
   function endGame(winner) {
     gameRunning = false;
-    const winnerName = players[winner]?.name || 'Player ' + (winner + 1);
+    let winnerName;
+    if (winner === 1 && players.length === 1) {
+      winnerName = 'Bot';
+    } else {
+      winnerName = players[winner]?.name || 'Player ' + (winner + 1);
+    }
     winnerTextEl.textContent = `${winnerName} Wins!`;
     gameOverEl.classList.add('visible');
   }
@@ -227,6 +234,48 @@
   function goToHub() {
     if (window.WeeParty) {
       window.WeeParty.navigateToHub();
+    }
+  }
+
+  // Bot AI for paddle2
+  function updateBot() {
+    const paddleCenter = paddle2.y + PADDLE_HEIGHT / 2;
+    const ballCenter = ball.y + BALL_SIZE / 2;
+
+    // Only react when ball is moving towards bot
+    if (ball.vx > 0) {
+      // Predict where ball will be
+      const distanceToBot = paddle2.x - ball.x;
+      const timeToReach = distanceToBot / ball.vx;
+      let predictedY = ball.y + ball.vy * timeToReach;
+
+      // Account for bounces off walls
+      while (predictedY < 0 || predictedY > canvas.height - BALL_SIZE) {
+        if (predictedY < 0) {
+          predictedY = -predictedY;
+        } else if (predictedY > canvas.height - BALL_SIZE) {
+          predictedY = 2 * (canvas.height - BALL_SIZE) - predictedY;
+        }
+      }
+
+      const targetY = predictedY + BALL_SIZE / 2;
+      const diff = targetY - paddleCenter;
+
+      // Add some imperfection based on difficulty
+      if (Math.abs(diff) > PADDLE_HEIGHT * (1 - BOT_DIFFICULTY) * 0.5) {
+        paddle2.vy = Math.sign(diff) * PADDLE_SPEED * BOT_DIFFICULTY;
+      } else {
+        paddle2.vy = 0;
+      }
+    } else {
+      // Ball moving away - slowly return to center
+      const centerY = canvas.height / 2;
+      const diff = centerY - paddleCenter;
+      if (Math.abs(diff) > 20) {
+        paddle2.vy = Math.sign(diff) * PADDLE_SPEED * 0.5;
+      } else {
+        paddle2.vy = 0;
+      }
     }
   }
 
